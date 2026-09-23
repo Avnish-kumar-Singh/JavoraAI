@@ -1,0 +1,17 @@
+project_name = "javora-ai"
+environment  = "dev"
+aws_region  = "us-east-1"
+
+container_image = "123456789012.dkr.ecr.us-east-1.amazonaws.com/javora-ai:latest"
+app_port       = 8000
+cpu            = 512
+memory         = 1024
+desired_count   = 1
+
+db_name     = "javoraai"
+db_username = "javora_admin"
+db_password = "ChangeMe123!"
+
+jwt_secret    = "replace-with-a-strong-32-plus-character-secret"
+llm_base_url  = "http://host.docker.internal:11434"
+cors_origins  = "*"

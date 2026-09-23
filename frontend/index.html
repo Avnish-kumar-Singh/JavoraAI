@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Javora AI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&family=Newsreader:opsz,wght@6..72,400;6..72,500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#0E1417;
+  --surface:#121C20;
+  --ink:#E9F1F1;
+  --ink-soft:#A9B7BA;
+  --ink-faint:#7E8C90;
+  --line:#1D2B2F;
+  --pine:#5BA786;
+  --pine-soft:rgba(91, 167, 134, 0.14);
+  --pine-strong:#7AD2A3;
+  --ochre:#D3A75A;
+  --rust:#D97A67;
+  --panel:#101A1D;
+  --panel-alt:#0F171A;
+  --shadow:0 22px 52px rgba(6, 10, 12, 0.38);
+  --sans:"IBM Plex Sans",ui-sans-serif,system-ui,sans-serif;
+  --serif:"Newsreader",Georgia,"Times New Roman",serif;
+  --mono:"IBM Plex Mono",ui-monospace,"SF Mono",Menlo,monospace;
+  --rail:290px;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  color-scheme:dark;
+}
+:root[data-theme="light"]{
+  --paper:#EEF2ED;
+  --surface:#F8FAF7;
+  --ink:#1C2830;
+  --ink-soft:#53616B;
+  --ink-faint:#7D8A92;
+  --line:#D9E0D8;
+  --pine:#2E6951;
+  --pine-soft:#E5F1EA;
+  --pine-strong:#1F4E3A;
+  --ochre:#B57A24;
+  --rust:#8F4D3D;
+  --panel:#FFFFFF;
+  --panel-alt:#F2F5F1;
+  --shadow:0 16px 40px rgba(25, 36, 29, 0.08);
+  color-scheme:light;
+}
+@media (prefers-color-scheme:light){
+  :root:not([data-theme="dark"]){
+    --paper:#EEF2ED;
+    --surface:#F8FAF7;
+    --ink:#1C2830;
+    --ink-soft:#53616B;
+    --ink-faint:#7D8A92;
+    --line:#D9E0D8;
+    --pine:#2E6951;
+    --pine-soft:#E5F1EA;
+    --pine-strong:#1F4E3A;
+    --ochre:#B57A24;
+    --rust:#8F4D3D;
+    --panel:#FFFFFF;
+    --panel-alt:#F2F5F1;
+    --shadow:0 16px 40px rgba(25, 36, 29, 0.08);
+    color-scheme:light;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#0E1417; --surface:#121C20; --ink:#E9F1F1; --ink-soft:#A9B7BA;
+  --ink-faint:#7E8C90; --line:#1D2B2F; --pine:#5BA786; --pine-soft:rgba(91, 167, 134, 0.14);
+  --pine-strong:#7AD2A3; --ochre:#D3A75A; --rust:#D97A67; --panel:#101A1D; --panel-alt:#0F171A;
+  --shadow:0 22px 52px rgba(6, 10, 12, 0.38); color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{
+  background:radial-gradient(circle at top left, rgba(91,167,134,0.15), transparent 30%),
+             linear-gradient(180deg, #11191C 0%, var(--paper) 100%);
+  color:var(--ink);
+  font-family:var(--sans);font-size:15px;line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+}
+button,input,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:none}
+:focus-visible{outline:2px solid var(--pine);outline-offset:2px;border-radius:2px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* ---------------- Auth ---------------- */
+#auth{
+  min-height:100%;display:grid;grid-template-columns:1fr;
+  place-items:center;padding:32px 20px;
+  background:
+    radial-gradient(circle at 18% 18%, rgba(101, 186, 157, 0.18), transparent 20%),
+    radial-gradient(circle at 80% 15%, rgba(160, 200, 255, 0.09), transparent 16%),
+    linear-gradient(180deg, #040d10 0%, #0a171b 100%);
+}
+@media(min-width:900px){
+  #auth{grid-template-columns:1.1fr 1fr;place-items:stretch;padding:0;min-height:100vh}
+}
+.auth-aside{
+  display:none;flex-direction:column;justify-content:space-between;
+  padding:64px 72px 52px;
+  background:linear-gradient(180deg, rgba(8,15,18,0.86), rgba(10,17,20,0.96));
+  border-right:1px solid rgba(165,180,183,0.12);
+  box-shadow:inset -1px 0 0 rgba(255,255,255,0.02);
+}
+@media(min-width:900px){.auth-aside{display:flex}}
+.brand-wrap{display:flex;align-items:center;gap:12px}
+.brand-mark{
+  width:34px;height:34px;border-radius:12px;display:grid;place-items:center;
+  background:linear-gradient(135deg,#3a8d75,#7cc2a1 55%,#dfeee4 100%);
+  color:#f9faf7;font-weight:700;font-family:var(--sans);font-size:18px;
+  box-shadow:0 10px 18px rgba(46,105,81,0.28);
+}
+.wordmark{font-family:var(--serif);font-size:26px;letter-spacing:-.01em;color:#eaf4f0}
+.wordmark b{font-weight:500;color:#88d7b4}
+.auth-lede{
+  font-family:var(--serif);font-size:clamp(34px,3.9vw,72px);
+  line-height:0.97;letter-spacing:-.05em;max-width:15ch;margin:0 0 20px;
+  color:#edf7f5;
+  text-shadow:0 8px 24px rgba(0, 0, 0, 0.2);
+  animation:textFloat 1s ease-out both;
+}
+.auth-sub{color:#cfe0df;max-width:44ch;margin:0;animation:textFloat 1.15s ease-out both;}
+.ai-summary{
+  margin-top:30px; padding-top:20px; border-top:1px solid rgba(161,178,181,0.18);
+  display:grid; gap:18px;
+}
+.ai-summary .mini-label{
+  font-size:12px; letter-spacing:0.14em; text-transform:uppercase;
+  color:#8bb9ad; font-weight:700;
+}
+.ai-summary .mini-copy{
+  font-size:15px; line-height:1.7; color:#dfe8e8; max-width:48ch;
+}
+.ai-feature-grid{
+  display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:10px;
+}
+.ai-feature-grid .feature-card{
+  background:rgba(17, 26, 29, 0.72); border:1px solid rgba(165,180,183,0.16);
+  border-radius:12px; padding:12px 12px 10px; min-height:110px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.02), 0 12px 22px rgba(0,0,0,0.08);
+  backdrop-filter: blur(10px);
+}
+.ai-feature-grid .feature-icon{
+  width:28px; height:28px; border-radius:8px; display:grid; place-items:center;
+  background:linear-gradient(180deg, rgba(123, 210, 163, 0.22), rgba(58,141,117,0.18));
+  color:#a9ebc9; font-size:14px; margin-bottom:10px;
+}
+.ai-feature-grid strong{
+  display:block; color:#f0f8f5; font-size:13px; margin-bottom:6px;
+}
+.ai-feature-grid span{
+  display:block; color:#bfd0ce; font-size:12.5px; line-height:1.5;
+}
+.ai-stats{
+  display:grid; grid-template-columns:repeat(3, minmax(0, 1fr)); gap:10px;
+}
+.ai-stats .stat-card{
+  background:linear-gradient(180deg, rgba(19,28,32,0.8), rgba(11,17,20,0.96));
+  border:1px solid rgba(165,180,183,0.16); border-radius:12px; padding:12px 10px;
+  box-shadow:0 10px 18px rgba(0,0,0,0.08);
+}
+.ai-stats .stat-number{
+  display:block; font-family:var(--serif); font-size:26px; color:#edf8f4; line-height:1;
+  margin-bottom:6px;
+}
+.ai-stats .stat-label{
+  color:#bfd0ce; font-size:11.5px; text-transform:uppercase; letter-spacing:0.08em;
+}
+.routes{border-top:1px solid rgba(161,178,181,0.18);padding-top:20px}
+.routes p{margin:0 0 14px;color:#b9c9ca;font-size:13px}
+.route-row{display:flex;gap:10px;flex-wrap:wrap}
+.auth-panel{
+  width:100%;max-width:420px;align-self:center;justify-self:center;padding:42px 26px 36px;
+  background:rgba(17, 24, 29, 0.56); border:1px solid rgba(185, 201, 202, 0.14);
+  border-radius:22px; box-shadow:0 26px 70px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255,255,255,0.04);
+  backdrop-filter: blur(12px);
+}
+.auth-panel h1{font-family:var(--serif);font-size:30px;font-weight:500;margin:0 0 6px;color:#edf7f5}
+.auth-panel .hint{color:#d4e4e2;margin:0 0 28px;font-size:14px}
+.field{margin-bottom:16px}
+.field label{display:block;font-size:13px;color:#d7e4e1;margin-bottom:6px}
+.field input{
+  width:100%;padding:12px 13px;background:rgba(255,255,255,0.94);
+  border:1px solid rgba(255,255,255,0.18);border-radius:10px;color:#112128;
+  box-shadow:inset 0 0 0 1px rgba(13,24,27,0.04);
+}
+.field input::placeholder{color:#67838a}
+.field input:focus{border-color:var(--pine);outline:none;box-shadow:0 0 0 4px rgba(91,167,134,0.12)}
+.btn-primary{
+  width:100%;padding:13px 12px;background:linear-gradient(180deg, #5ba786 0%, #2d6e58 100%);
+  color:#f0f9f4;border-radius:10px;font-weight:600;border:1px solid rgba(124,201,161,0.35);
+  box-shadow:0 14px 26px rgba(36,92,72,0.22), 0 0 0 1px rgba(126, 214, 173, 0.14);
+  transition:transform .18s ease, box-shadow .18s ease;
+}
+.btn-primary:hover{transform:translateY(-1px); box-shadow:0 16px 28px rgba(36,92,72,0.34), 0 0 0 1px rgba(126, 214, 173, 0.2)}
+:root[data-theme="dark"] .btn-primary,
+:where(:root:not([data-theme="light"])) .btn-primary{color:#f0f9f4}
+@media (prefers-color-scheme:light){:root:not([data-theme="dark"]) .btn-primary{color:#fff}}
+.btn-primary:disabled{opacity:.55;cursor:not-allowed}
+.swap{margin-top:20px;font-size:14px;color:#cfe0df;text-align:center}
+.swap button{color:#8fddb7;font-weight:500;text-decoration:underline;text-underline-offset:3px}
+.notice{
+  margin-bottom:16px;padding:10px 12px;border-radius:6px;font-size:13.5px;
+  background:rgba(217,122,103,0.12);
+  color:#f6b5a9;border:1px solid rgba(217,122,103,0.28);
+}
+.notice[hidden]{display:none}
+@keyframes textFloat{
+  0%{opacity:0;transform:translateY(10px)}
+  100%{opacity:1;transform:translateY(0)}
+}
+
+/* ---------------- App shell ---------------- */
+#app{height:100%;display:grid;grid-template-columns:var(--rail) 1fr}
+@media(max-width:820px){#app{grid-template-columns:1fr}}
+.rail{
+  background:linear-gradient(180deg, rgba(248,250,247,0.98), rgba(242,245,241,0.96));
+  border-right:1px solid var(--line);
+  display:flex;flex-direction:column;min-height:0;
+}
+@media(max-width:820px){
+  .rail{position:fixed;inset:0 auto 0 0;width:min(86vw,var(--rail));z-index:20;
+    transform:translateX(-100%);transition:transform .18s ease;
+    padding-top:env(safe-area-inset-top,0px)}
+  .rail.open{transform:none}
+  .scrim{position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:19}
+  .scrim[hidden]{display:none}
+}
+.rail-head{padding:18px 18px 14px;border-bottom:1px solid var(--line)}
+.rail-head .wordmark{font-size:19px;margin-bottom:14px}
+.btn-new{
+  width:100%;padding:9px;border:1px solid var(--line);border-radius:6px;
+  background:var(--paper);font-weight:500;font-size:14px;
+}
+.btn-new:hover{border-color:var(--pine);color:var(--pine)}
+.rail-search{padding:12px 18px;border-bottom:1px solid var(--line)}
+.rail-search input{
+  width:100%;padding:8px 11px;font-size:13.5px;background:var(--paper);
+  border:1px solid var(--line);border-radius:6px;
+}
+.rail-list{flex:1;overflow-y:auto;padding:8px 10px 20px;min-height:0}
+.rail-group{font-size:12px;color:var(--ink-faint);padding:12px 8px 6px}
+.rail-item{
+  display:block;width:100%;text-align:left;padding:9px 10px;border-radius:6px;
+  font-size:13.5px;color:var(--ink-soft);line-height:1.35;position:relative;
+}
+.rail-item:hover{background:var(--paper);color:var(--ink)}
+.rail-item.active{background:var(--pine-soft);color:var(--ink)}
+.rail-item .meta{display:block;font-size:11.5px;color:var(--ink-faint);margin-top:3px}
+.rail-item .kill{
+  position:absolute;right:6px;top:7px;padding:2px 6px;border-radius:4px;
+  color:var(--ink-faint);font-size:15px;line-height:1;opacity:0;
+}
+.rail-item:hover .kill{opacity:1}
+.rail-item .kill:hover{color:var(--rust);background:var(--paper)}
+.rail-foot{
+  padding:12px 18px;border-top:1px solid var(--line);
+  display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13px;
+}
+.rail-foot .who{color:var(--ink-soft);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.rail-foot button{color:var(--ink-faint);font-size:13px}
+.rail-foot button:hover{color:var(--rust)}
+.empty-rail{padding:18px 10px;color:var(--ink-faint);font-size:13px;line-height:1.5}
+
+/* ---------------- Conversation ---------------- */
+.main{display:flex;flex-direction:column;min-height:0;min-width:0;background:transparent}
+.topbar{
+  display:flex;align-items:center;gap:12px;padding:12px 20px;
+  border-bottom:none;background:transparent;
+  padding-top:calc(12px + env(safe-area-inset-top,0px));
+}
+@media(min-width:821px){.topbar .hamburger{display:none}}
+.hamburger{font-size:19px;line-height:1;padding:4px 8px;color:var(--ink-soft)}
+.topbar h2{font-family:var(--serif);font-weight:400;font-size:17px;margin:0;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.thread{flex:1;overflow-y:auto;padding:30px 20px 10px;min-height:0;background:transparent}
+.thread-inner{max-width:1200px;margin:0 auto;padding:0 12px}
+.turn{display:flex;align-items:flex-start;margin-bottom:24px;width:100%}
+.turn.user{justify-content:flex-end;padding-left:10%}
+.turn.assistant{justify-content:flex-start;padding-right:10%}
+.ask{
+  max-width:min(72%,560px);font-family:var(--serif);font-size:20px;line-height:1.45;
+  padding:14px 18px;border-radius:18px 18px 6px 18px;
+  background:linear-gradient(135deg,#2d6a50,#1f4b3b);color:#f8fbf9;
+  box-shadow:0 14px 28px rgba(31,75,59,.18);white-space:pre-wrap;
+}
+.answer{max-width:min(76%,700px);font-family:var(--serif);font-size:16.5px;line-height:1.7;color:var(--ink);
+  background:rgba(255,255,255,.38);padding:16px 18px;border-radius:18px 18px 18px 6px;
+  border:1px solid rgba(217,224,216,0.9);box-shadow:0 12px 24px rgba(28,40,48,0.04)}
+.answer p{margin:0 0 .9em;max-width:72ch}
+.answer h2,.answer h3{font-family:var(--sans);font-weight:600;font-size:15px;
+  margin:1.5em 0 .5em;letter-spacing:.005em}
+.answer ul,.answer ol{margin:0 0 .9em;padding-left:1.25em;max-width:70ch}
+.answer li{margin-bottom:.3em}
+.answer code{font-family:var(--mono);font-size:.86em;background:var(--surface);
+  padding:1px 5px;border-radius:4px;border:1px solid var(--line)}
+.answer pre{
+  background:var(--surface);border:1px solid var(--line);border-left:2px solid var(--pine);
+  border-radius:6px;padding:14px 16px;overflow-x:auto;margin:0 0 1em;
+}
+.answer pre code{background:none;border:none;padding:0;font-size:13px;line-height:1.6}
+.answer strong{font-weight:500;color:var(--ink)}
+.stamp{display:flex;align-items:center;gap:8px;margin-top:12px;flex-wrap:wrap}
+.chip{
+  display:inline-flex;align-items:center;gap:6px;font-family:var(--sans);
+  font-size:11.5px;padding:3px 9px;border-radius:999px;
+  border:1px solid var(--line);color:var(--ink-soft);background:var(--surface);
+}
+.chip::before{content:"";width:5px;height:5px;border-radius:50%;background:var(--ink-faint)}
+.chip[data-route="rag"]::before{background:var(--pine)}
+.chip[data-route="web"]::before{background:var(--ochre)}
+.chip[data-route="dsa"]::before{background:#5B7DB1}
+.chip[data-route="review"]::before{background:#8A6FA8}
+.chip[data-route="java_compiler"]::before{background:var(--rust)}
+.chip .ms{font-family:var(--mono);font-size:11px;color:var(--ink-faint)}
+.thinking{display:inline-flex;gap:4px;align-items:center;color:var(--ink-faint);font-size:14px}
+.thinking i{width:4px;height:4px;border-radius:50%;background:var(--ink-faint);
+  animation:pulse 1.1s infinite ease-in-out}
+.thinking i:nth-child(2){animation-delay:.16s}
+.thinking i:nth-child(3){animation-delay:.32s}
+@keyframes pulse{0%,60%,100%{opacity:.25}30%{opacity:1}}
+.cursor{display:inline-block;width:7px;height:1em;background:var(--pine);
+  vertical-align:-2px;animation:blink .9s steps(2) infinite}
+@keyframes blink{0%,50%{opacity:1}51%,100%{opacity:0}}
+
+.blank{max-width:560px;margin:8vh auto 0;text-align:left}
+.blank h3{font-family:var(--serif);font-weight:400;font-size:27px;margin:0 0 10px;letter-spacing:-.01em}
+.blank p{color:var(--ink-soft);margin:0 0 26px;max-width:52ch}
+.seed{
+  display:block;width:100%;text-align:left;padding:12px 14px;margin-bottom:8px;
+  border:1px solid var(--line);border-radius:7px;font-size:14px;color:var(--ink-soft);
+  background:var(--surface);
+}
+.seed:hover{border-color:var(--pine);color:var(--ink)}
+.seed span{display:block;font-size:11.5px;color:var(--ink-faint);margin-top:3px}
+
+/* ---------------- Composer ---------------- */
+.composer{padding:12px 20px 18px;border-top:none;background:transparent;backdrop-filter:none}
+.composer-inner{max-width:760px;margin:0 auto;position:relative}
+.composer textarea{
+  width:100%;resize:none;padding:16px 56px 16px 16px;min-height:56px;max-height:220px;
+  background:rgba(255,255,255,.88);border:1px solid var(--line);border-radius:16px;
+  font-size:15px;line-height:1.55;box-shadow:0 10px 20px rgba(17,24,16,0.04);
+}
+.composer textarea:focus{border-color:var(--pine);outline:none;box-shadow:0 0 0 4px rgba(46,105,81,0.12)}
+.send{
+  position:absolute;right:10px;bottom:10px;width:42px;height:42px;border-radius:13px;
+  background:linear-gradient(180deg, #4F8F76 0%, #2C654F 100%);
+  color:var(--paper);display:grid;place-items:center;
+  box-shadow:0 12px 22px rgba(46,105,81,0.24);
+  border:1px solid rgba(160, 220, 185, 0.3);
+  padding:0;
+}
+.send .brand-mark-mini{
+  width:18px;height:18px;border-radius:7px;display:grid;place-items:center;
+  background:linear-gradient(135deg,#dff5eb,#a9d5be 58%,#79b99b 100%);
+  color:#1a3d2f;font-weight:700;font-size:11px;line-height:1;
+  font-family:var(--sans);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,0.6);
+}
+.send:disabled{opacity:.4;cursor:not-allowed}
+.composer .tip{margin:8px 2px 0;font-size:12px;color:var(--ink-faint)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+
+<!-- =================== AUTH =================== -->
+<div id="auth">
+  <aside class="auth-aside">
+    <div class="brand-wrap">
+      <div class="brand-mark">J</div>
+      <div class="wordmark">Javora<b>AI</b></div>
+    </div>
+    <div>
+      <h2 class="auth-lede">Ask about Java. Get a real explanation.</h2>
+      <p class="auth-sub">Every question is sent to whichever tool answers it best — your indexed notes, a live web lookup, the Java compiler, or the model on its own.</p>
+
+      <div class="ai-summary">
+        <div class="mini-label">About JavoraAI</div>
+        <div class="mini-copy">
+          JavoraAI is a Java-focused AI mentor built for developers who want fast, practical help with coding, debugging, architecture, and interview preparation.
+        </div>
+
+        <div class="ai-feature-grid">
+          <div class="feature-card">
+            <div class="feature-icon">⚡</div>
+            <strong>Fast answers</strong>
+            <span>Get clear explanations in seconds.</span>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🔎</div>
+            <strong>Deep context</strong>
+            <span>Uses notes, web, and compiler signal together.</span>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">🛠️</div>
+            <strong>Code review</strong>
+            <span>Catch bugs and improve implementation quality.</span>
+          </div>
+        </div>
+
+        <div class="ai-stats">
+          <div class="stat-card">
+            <span class="stat-number">24/7</span>
+            <span class="stat-label">Mentor access</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-number">3x</span>
+            <span class="stat-label">Context layers</span>
+          </div>
+          <div class="stat-card">
+            <span class="stat-number">1</span>
+            <span class="stat-label">Java brain</span>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="routes">
+      <p>Questions are answered through</p>
+      <div class="route-row">
+        <span class="chip" data-route="llm">Model</span>
+        <span class="chip" data-route="rag">Your notes</span>
+        <span class="chip" data-route="web">Web</span>
+        <span class="chip" data-route="dsa">DSA</span>
+        <span class="chip" data-route="review">Code review</span>
+        <span class="chip" data-route="java_compiler">Compiler</span>
+      </div>
+    </div>
+  </aside>
+
+  <div class="auth-panel">
+    <h1 id="authTitle">Sign in</h1>
+    <p class="hint" id="authHint">Pick up where you left off.</p>
+
+    <div class="notice" id="authError" hidden></div>
+
+    <form id="authForm" autocomplete="on">
+      <div class="field" id="fieldUsername" hidden>
+        <label for="username">Username</label>
+        <input id="username" name="username" autocomplete="username" minlength="3" maxlength="64">
+      </div>
+      <div class="field" id="fieldEmail" hidden>
+        <label for="email">Email</label>
+        <input id="email" name="email" type="email" autocomplete="email">
+      </div>
+      <div class="field" id="fieldIdentifier">
+        <label for="identifier">Username or email</label>
+        <input id="identifier" name="identifier" autocomplete="username">
+      </div>
+      <div class="field">
+        <label for="password">Password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" minlength="8">
+      </div>
+      <button class="btn-primary" id="authSubmit" type="submit">Sign in</button>
+    </form>
+
+    <p class="swap" id="authSwap">
+      New here? <button type="button" id="swapBtn">Create an account</button>
+    </p>
+  </div>
+</div>
+
+<!-- =================== APP =================== -->
+<div id="app" hidden>
+  <div class="scrim" id="scrim" hidden></div>
+
+  <aside class="rail" id="rail">
+    <div class="rail-head">
+      <div class="brand-wrap">
+        <div class="brand-mark">J</div>
+        <div class="wordmark">Javora<b>AI</b></div>
+      </div>
+      <button class="btn-new" id="newChat">Start a new chat</button>
+    </div>
+    <div class="rail-search">
+      <input id="histSearch" type="search" placeholder="Search everything you've asked">
+    </div>
+    <div class="rail-list" id="railList"></div>
+    <div class="rail-foot">
+      <span class="who" id="whoami"></span>
+      <button id="logout">Sign out</button>
+    </div>
+  </aside>
+
+  <main class="main">
+    <header class="topbar">
+      <button class="hamburger" id="hamburger" aria-label="Show history">&#9776;</button>
+      <h2 id="threadTitle">New chat</h2>
+    </header>
+
+    <div class="thread" id="thread"><div class="thread-inner" id="threadInner"></div></div>
+
+    <div class="composer">
+      <div class="composer-inner">
+        <textarea id="input" rows="1" placeholder="Ask a Java question, or paste code to compile or review"></textarea>
+        <button class="send" id="send" aria-label="Send"><span class="brand-mark-mini">J</span></button>
+        <p class="tip">Enter sends · Shift+Enter adds a line</p>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script>
+(() => {
+"use strict";
+
+const API = location.origin;
+const TOKEN_KEY = "jm_token";
+const SESSION_KEY = "jm_session_id";
+const $ = (id) => document.getElementById(id);
+
+let token = localStorage.getItem(TOKEN_KEY) || null;
+let user = null;
+let sessionId = null;
+let streaming = false;
+let mode = "login";
+
+function getTimeGreeting(name = "there") {
+  const hour = new Date().getHours();
+  let greeting = "Good evening";
+  if (hour < 12) greeting = "Good morning";
+  else if (hour < 18) greeting = "Good afternoon";
+
+  const extras = [
+    "How's it going?",
+    "Ready to solve something interesting?",
+    "What Java problem would you like to tackle today?"
+  ];
+  const extra = extras[Math.floor((new Date().getMinutes() + hour) % extras.length)];
+
+  return `Welcome to our chat, ${name}. ${greeting}! ${extra}`;
+}
+
+function setSessionId(id) {
+  sessionId = id;
+  if (id == null) localStorage.removeItem(SESSION_KEY);
+  else localStorage.setItem(SESSION_KEY, String(id));
+}
+
+/* ---------------- HTTP ---------------- */
+async function api(path, {method="GET", body, auth=true} = {}) {
+  const headers = {};
+  if (body) headers["Content-Type"] = "application/json";
+  if (auth && token) headers["Authorization"] = `Bearer ${token}`;
+
+  const res = await fetch(API + path, {
+    method, headers, body: body ? JSON.stringify(body) : undefined
+  });
+
+  if (res.status === 401) { signOut(); throw new Error("Your session expired. Sign in again."); }
+  if (res.status === 204) return null;
+
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(detailOf(data) || `Request failed (${res.status})`);
+  return data;
+}
+
+function detailOf(data) {
+  const d = data && data.detail;
+  if (!d) return "";
+  if (typeof d === "string") return d;
+  if (Array.isArray(d) && d.length) return d[0].msg || "Check the highlighted fields.";
+  return "";
+}
+
+/* ---------------- Auth screen ---------------- */
+function setMode(next) {
+  mode = next;
+  const signup = mode === "signup";
+  $("authTitle").textContent = signup ? "Create your account" : "Sign in";
+  $("authHint").textContent = signup
+    ? "Your chats and question history are saved to this account."
+    : "Pick up where you left off.";
+  $("authSubmit").textContent = signup ? "Create account" : "Sign in";
+  $("fieldUsername").hidden = !signup;
+  $("fieldEmail").hidden = !signup;
+  $("fieldIdentifier").hidden = signup;
+  $("password").setAttribute("autocomplete", signup ? "new-password" : "current-password");
+  $("authSwap").innerHTML = signup
+    ? 'Already have an account? <button type="button" id="swapBtn">Sign in</button>'
+    : 'New here? <button type="button" id="swapBtn">Create an account</button>';
+  $("swapBtn").onclick = () => { showAuthError(""); setMode(signup ? "login" : "signup"); };
+  showAuthError("");
+}
+
+function showAuthError(msg) {
+  const box = $("authError");
+  box.textContent = msg;
+  box.hidden = !msg;
+}
+
+$("authForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const btn = $("authSubmit");
+  btn.disabled = true;
+  showAuthError("");
+
+  try {
+    const password = $("password").value;
+    let data;
+
+    if (mode === "signup") {
+      data = await api("/api/auth/register", {
+        method: "POST", auth: false,
+        body: { username: $("username").value.trim(), email: $("email").value.trim(), password }
+      });
+    } else {
+      data = await api("/api/auth/login", {
+        method: "POST", auth: false,
+        body: { identifier: $("identifier").value.trim(), password }
+      });
+    }
+
+    token = data.access_token;
+    user = data.user;
+    localStorage.setItem(TOKEN_KEY, token);
+    $("password").value = "";
+    await enterApp();
+  } catch (err) {
+    showAuthError(err.message);
+  } finally {
+    btn.disabled = false;
+  }
+});
+
+function signOut() {
+  token = null; user = null;
+  setSessionId(null);
+  localStorage.removeItem(TOKEN_KEY);
+  $("app").hidden = true;
+  $("auth").hidden = false;
+  setMode("login");
+}
+$("logout").onclick = signOut;
+
+/* ---------------- Shell ---------------- */
+async function enterApp() {
+  $("auth").hidden = true;
+  $("app").hidden = false;
+  $("whoami").textContent = user ? `Welcome, ${user.username}` : "";
+
+  // Reopen whatever chat was on screen last time, so refreshing the page
+  // (or reopening the app) continues the conversation instead of quietly
+  // starting a new one each time.
+  const saved = localStorage.getItem(SESSION_KEY);
+  if (saved) {
+    try {
+      await openSession(Number(saved));
+    } catch {
+      setSessionId(null);
+      renderBlank();
+    }
+  } else {
+    renderBlank();
+  }
+
+  await loadSessions();
+  $("input").focus();
+}
+
+$("hamburger").onclick = () => { $("rail").classList.add("open"); $("scrim").hidden = false; };
+$("scrim").onclick = closeRail;
+function closeRail(){ $("rail").classList.remove("open"); $("scrim").hidden = true; }
+
+$("newChat").onclick = () => {
+  setSessionId(null);
+  $("threadTitle").textContent = "New chat";
+  renderBlank();
+  markActive();
+  closeRail();
+  $("input").focus();
+};
+
+/* ---------------- History rail ---------------- */
+let searchTimer = null;
+$("histSearch").addEventListener("input", (e) => {
+  clearTimeout(searchTimer);
+  const q = e.target.value.trim();
+  searchTimer = setTimeout(() => q ? searchHistory(q) : loadSessions(), 220);
+});
+
+async function loadSessions() {
+  try {
+    const sessions = await api("/api/history/sessions");
+    const list = $("railList");
+    list.innerHTML = "";
+
+    if (!sessions.length) {
+      list.innerHTML = '<p class="empty-rail">Your chats will be listed here. Everything you ask is saved to your account.</p>';
+      return;
+    }
+
+    const group = document.createElement("div");
+    group.className = "rail-group";
+    group.textContent = "Chats";
+    list.appendChild(group);
+
+    for (const s of sessions) {
+      const item = document.createElement("button");
+      item.className = "rail-item";
+      item.dataset.session = s.id;
+      item.innerHTML = `${escapeHtml(s.title)}<span class="meta">${relTime(s.updated_at)}</span>
+        <span class="kill" role="button" title="Delete chat">&times;</span>`;
+      item.onclick = (e) => {
+        if (e.target.classList.contains("kill")) { e.stopPropagation(); deleteSession(s.id); return; }
+        openSession(s.id);
+      };
+      list.appendChild(item);
+    }
+    markActive();
+  } catch (err) { /* signed out mid-request */ }
+}
+
+async function searchHistory(q) {
+  try {
+    const page = await api(`/api/history?q=${encodeURIComponent(q)}&limit=40`);
+    const list = $("railList");
+    list.innerHTML = "";
+
+    const group = document.createElement("div");
+    group.className = "rail-group";
+    group.textContent = page.total ? `${page.total} match${page.total === 1 ? "" : "es"}` : "No matches";
+    list.appendChild(group);
+
+    if (!page.total) {
+      list.insertAdjacentHTML("beforeend",
+        '<p class="empty-rail">Nothing matched. Try a different word.</p>');
+      return;
+    }
+
+    for (const h of page.items) {
+      const item = document.createElement("button");
+      item.className = "rail-item";
+      item.innerHTML = `${escapeHtml(trim(h.query, 90))}
+        <span class="meta">${h.tool.replace("_"," ")} · ${relTime(h.created_at)}</span>`;
+      item.onclick = () => h.session_id ? openSession(h.session_id) : null;
+      list.appendChild(item);
+    }
+  } catch (err) { /* ignore */ }
+}
+
+async function deleteSession(id) {
+  await api(`/api/history/sessions/${id}`, { method: "DELETE" });
+  if (sessionId === id) { setSessionId(null); renderBlank(); $("threadTitle").textContent = "New chat"; }
+  loadSessions();
+}
+
+async function openSession(id) {
+  const detail = await api(`/api/history/sessions/${id}`);
+  setSessionId(id);
+  $("threadTitle").textContent = detail.title;
+  $("threadInner").innerHTML = "";
+
+  for (const e of detail.entries) {
+    appendAsk(e.query);
+    const node = appendAnswer();
+    node.body.innerHTML = renderMarkdown(e.response);
+    stampAnswer(node, e.tool, e.latency_ms, false);
+  }
+  markActive();
+  closeRail();
+  scrollDown();
+}
+
+function markActive() {
+  document.querySelectorAll(".rail-item").forEach(el =>
+    el.classList.toggle("active", Number(el.dataset.session) === sessionId));
+}
+
+/* ---------------- Thread rendering ---------------- */
+function renderBlank() {
+  const welcomeName = (user && user.username) ? user.username : "there";
+  $("threadInner").innerHTML = `
+    <div class="blank">
+      <h3>${escapeHtml(getTimeGreeting(welcomeName))}</h3>
+      <p>Ask a concept question, paste a stack trace, or drop in a class and ask for it to be compiled or reviewed.</p>
+      <button class="seed">Explain how HashMap resolves collisions internally<span>Answered from your indexed notes</span></button>
+      <button class="seed">What changed in the latest Java LTS release?<span>Looks it up on the web</span></button>
+      <button class="seed">Solve two-sum and walk through the optimal approach<span>Goes to the DSA solver</span></button>
+    </div>`;
+  document.querySelectorAll(".seed").forEach(b => {
+    b.onclick = () => { $("input").value = b.firstChild.textContent; send(); };
+  });
+}
+
+function appendAsk(text) {
+  const el = document.createElement("div");
+  el.className = "turn user";
+  const q = document.createElement("div");
+  q.className = "ask";
+  q.textContent = text;
+  el.appendChild(q);
+  $("threadInner").appendChild(el);
+  return el;
+}
+
+function appendAnswer() {
+  const el = document.createElement("div");
+  el.className = "turn assistant";
+  $("threadInner").appendChild(el);
+
+  const body = document.createElement("div");
+  body.className = "answer";
+  el.appendChild(body);
+  const stamp = document.createElement("div");
+  stamp.className = "stamp";
+  el.appendChild(stamp);
+  return { turn: el, body, stamp };
+}
+
+function stampAnswer(node, tool, ms, cached) {
+  const label = { llm:"Model", rag:"Your notes", web:"Web search",
+                  dsa:"DSA solver", review:"Code review",
+                  java_compiler:"Java compiler" }[tool] || tool;
+  node.stamp.innerHTML =
+    `<span class="chip" data-route="${escapeHtml(tool)}">${escapeHtml(label)}</span>` +
+    (cached ? `<span class="chip">Reused earlier answer</span>`
+            : `<span class="chip"><span class="ms">${(ms/1000).toFixed(1)}s</span></span>`);
+}
+
+function scrollDown() { const t = $("thread"); t.scrollTop = t.scrollHeight; }
+
+/* ---------------- Sending ---------------- */
+const input = $("input");
+input.addEventListener("input", () => {
+  input.style.height = "auto";
+  input.style.height = Math.min(input.scrollHeight, 220) + "px";
+});
+input.addEventListener("keydown", (e) => {
+  if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
+});
+$("send").onclick = send;
+
+async function send() {
+  const text = input.value.trim();
+  if (!text || streaming) return;
+
+  if ($("threadInner").querySelector(".blank")) $("threadInner").innerHTML = "";
+
+  streaming = true;
+  $("send").disabled = true;
+  input.value = "";
+  input.style.height = "auto";
+
+  appendAsk(text);
+  const node = appendAnswer();
+  node.body.innerHTML = '<span class="thinking"><i></i><i></i><i></i></span>';
+  scrollDown();
+
+  let raw = "";
+  let tool = "llm";
+  let started = false;
+
+  try {
+    const res = await fetch(`${API}/api/chat/stream`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+      body: JSON.stringify({ message: text, session_id: sessionId })
+    });
+
+    if (res.status === 401) { signOut(); return; }
+    if (!res.ok || !res.body) throw new Error("The server could not answer that request.");
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = "";
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+
+      buffer += decoder.decode(value, { stream: true });
+      const lines = buffer.split("\n\n");
+      buffer = lines.pop();
+
+      for (const line of lines) {
+        if (!line.startsWith("data:")) continue;
+        const payload = line.slice(5).trim();
+        if (!payload || payload === "[DONE]") continue;
+
+        let evt;
+        try { evt = JSON.parse(payload); } catch { continue; }
+
+        if (evt.type === "session") {
+          setSessionId(evt.session_id);
+          // Server-decided title — a greeting-only chat is titled
+          // "New chat" rather than the greeting text, so casual
+          // messages in the sidebar don't all look identical.
+          if (evt.title) $("threadTitle").textContent = evt.title;
+        } else if (evt.type === "meta") {
+          tool = evt.tool;
+        } else if (evt.type === "token") {
+          if (!started) { node.body.innerHTML = ""; started = true; }
+          raw += evt.text;
+          node.body.innerHTML = renderMarkdown(raw) + '<span class="cursor"></span>';
+          scrollDown();
+        } else if (evt.type === "done") {
+          raw = evt.response || raw;
+          node.body.innerHTML = renderMarkdown(raw);
+          stampAnswer(node, tool, evt.latency_ms || 0, evt.cached);
+          scrollDown();
+        }
+      }
+    }
+  } catch (err) {
+    node.body.innerHTML = `<p>${escapeHtml(err.message)} Check that the backend and Ollama are both running, then ask again.</p>`;
+  } finally {
+    streaming = false;
+    $("send").disabled = false;
+    input.focus();
+    loadSessions();
+  }
+}
+
+/* ---------------- Helpers ---------------- */
+function escapeHtml(s) {
+  return String(s ?? "").replace(/[&<>"']/g, c =>
+    ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;", "'":"&#39;" }[c]));
+}
+
+function trim(s, n) { s = String(s ?? "").replace(/\s+/g," ").trim(); return s.length > n ? s.slice(0,n)+"…" : s; }
+
+function relTime(iso) {
+  const then = new Date(iso.endsWith("Z") || iso.includes("+") ? iso : iso + "Z");
+  const mins = Math.round((Date.now() - then.getTime()) / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  if (mins < 1440) return `${Math.round(mins/60)}h ago`;
+  if (mins < 10080) return `${Math.round(mins/1440)}d ago`;
+  return then.toLocaleDateString();
+}
+
+// Small markdown subset: fenced code, headings, lists, bold, inline code.
+function renderMarkdown(src) {
+  const blocks = [];
+  let text = String(src ?? "").replace(/```(\w+)?\n?([\s\S]*?)(?:```|$)/g, (_, lang, code) => {
+    blocks.push(`<pre><code>${escapeHtml(code.replace(/\n$/, ""))}</code></pre>`);
+    return `\u0000${blocks.length - 1}\u0000`;
+  });
+
+  text = escapeHtml(text);
+
+  const out = [];
+  let list = null;
+
+  for (const line of text.split("\n")) {
+    const ph = line.match(/^\u0000(\d+)\u0000$/);
+    if (ph) { closeList(); out.push(blocks[+ph[1]]); continue; }
+
+    const heading = line.match(/^(#{1,6})\s+(.*)$/);
+    if (heading) { closeList(); out.push(`<h3>${inline(heading[2])}</h3>`); continue; }
+
+    const ol = line.match(/^\s*\d+[.)]\s+(.*)$/);
+    const ul = line.match(/^\s*[-*+]\s+(.*)$/);
+    if (ol || ul) {
+      const want = ol ? "ol" : "ul";
+      if (list !== want) { closeList(); out.push(`<${want}>`); list = want; }
+      out.push(`<li>${inline((ol || ul)[1])}</li>`);
+      continue;
+    }
+
+    closeList();
+    if (line.trim()) out.push(`<p>${inline(line)}</p>`);
+  }
+  closeList();
+
+  function closeList(){ if (list) { out.push(`</${list}>`); list = null; } }
+  return out.join("");
+}
+
+function inline(s) {
+  return s
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
+    .replace(/(^|\W)\*([^*\n]+)\*(?=\W|$)/g, "$1<em>$2</em>");
+}
+
+/* ---------------- Boot ---------------- */
+(async function boot() {
+  setMode("login");
+  if (!token) return;
+  try {
+    user = await api("/api/auth/me");
+    await enterApp();
+  } catch {
+    signOut();
+  }
+})();
+
+})();
+</script>
+</body>
+</html>

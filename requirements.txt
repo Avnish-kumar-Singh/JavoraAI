@@ -1,0 +1,30 @@
+# --- Agent / LLM ---
+langgraph
+langchain
+langchain-core
+langchain-community
+langchain-ollama
+langchain-text-splitters
+langchain-chroma
+
+# --- Web search ---
+ddgs
+
+# --- API ---
+fastapi
+uvicorn[standard]
+gunicorn
+sqlalchemy>=2.0
+pydantic>=2
+pydantic-settings
+email-validator
+PyJWT
+python-multipart
+psycopg[binary]
+psycopg2-binary
+
+# --- CLI (optional, used by main.py only) ---
+prompt_toolkit
+pyperclip
+
+typing_extensions

@@ -1,0 +1,39 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# --- Env / secrets ---
+.env
+.env.*
+!.env.example
+
+# --- App runtime data ---
+data/chroma_db/
+app/temp/*
+!app/temp/.gitkeep
+*.db
+*.sqlite3
+
+# --- Terraform / AWS ---
+aws/terraform/.terraform/
+aws/terraform/.terraform.lock.hcl
+aws/terraform/*.tfstate
+aws/terraform/*.tfstate.*
+aws/terraform/terraform.tfvars
+aws/terraform/*.tfplan
+aws/terraform/crash.log
+
+# --- Editor / OS ---
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# --- Azure tooling (not used for this deployment) ---
+.azure/
+.copilot-azure/

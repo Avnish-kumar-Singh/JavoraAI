@@ -1,0 +1,5 @@
+Java is an object-oriented programming language.
+
+JVM executes Java bytecode.
+
+HashMap stores key-value pairs.
