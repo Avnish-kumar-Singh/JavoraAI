@@ -14,65 +14,25 @@ provider "aws" {
   }
 }
 
-data "aws_availability_zones" "available" {
-  state = "available"
+# Use the account's existing default VPC instead of creating a new one, so
+# this stack lands in the same network as anything else you've already
+# launched by hand (e.g. an EC2 box running Ollama) and can reach it over
+# private IPs without VPC peering.
+data "aws_vpc" "default" {
+  default = true
 }
 
-resource "aws_vpc" "main" {
-  cidr_block           = "10.30.0.0/16"
-  enable_dns_hostnames = true
-  enable_dns_support   = true
-
-  tags = {
-    Name = local.name
+data "aws_subnets" "default" {
+  filter {
+    name   = "vpc-id"
+    values = [data.aws_vpc.default.id]
   }
-}
-
-resource "aws_internet_gateway" "main" {
-  vpc_id = aws_vpc.main.id
-
-  tags = {
-    Name = local.name
-  }
-}
-
-resource "aws_subnet" "public" {
-  count = 2
-
-  vpc_id                  = aws_vpc.main.id
-  cidr_block              = cidrsubnet(aws_vpc.main.cidr_block, 8, count.index)
-  availability_zone       = data.aws_availability_zones.available.names[count.index]
-  map_public_ip_on_launch = true
-
-  tags = {
-    Name = "${local.name}-public-${count.index + 1}"
-  }
-}
-
-resource "aws_route_table" "public" {
-  vpc_id = aws_vpc.main.id
-
-  route {
-    cidr_block = "0.0.0.0/0"
-    gateway_id = aws_internet_gateway.main.id
-  }
-
-  tags = {
-    Name = "${local.name}-public"
-  }
-}
-
-resource "aws_route_table_association" "public" {
-  count = length(aws_subnet.public)
-
-  subnet_id      = aws_subnet.public[count.index].id
-  route_table_id = aws_route_table.public.id
 }
 
 resource "aws_security_group" "alb" {
   name        = "${local.name}-alb"
   description = "Security group for the application load balancer"
-  vpc_id      = aws_vpc.main.id
+  vpc_id      = data.aws_vpc.default.id
 
   ingress {
     from_port   = 80
@@ -99,7 +59,7 @@ resource "aws_security_group" "alb" {
 resource "aws_security_group" "ecs" {
   name        = "${local.name}-ecs"
   description = "Security group for ECS tasks"
-  vpc_id      = aws_vpc.main.id
+  vpc_id      = data.aws_vpc.default.id
 
   ingress {
     from_port       = var.app_port
@@ -119,7 +79,7 @@ resource "aws_security_group" "ecs" {
 resource "aws_security_group" "rds" {
   name        = "${local.name}-rds"
   description = "Security group for the PostgreSQL database"
-  vpc_id      = aws_vpc.main.id
+  vpc_id      = data.aws_vpc.default.id
 
   ingress {
     from_port       = 5432
@@ -155,7 +115,7 @@ resource "aws_ecs_cluster" "main" {
 
 resource "aws_db_subnet_group" "main" {
   name       = local.name
-  subnet_ids = aws_subnet.public[*].id
+  subnet_ids = data.aws_subnets.default.ids
 }
 
 resource "aws_db_instance" "main" {
@@ -203,7 +163,7 @@ resource "aws_lb" "main" {
   internal           = false
   load_balancer_type = "application"
   security_groups    = [aws_security_group.alb.id]
-  subnets            = aws_subnet.public[*].id
+  subnets            = data.aws_subnets.default.ids
 }
 
 resource "aws_lb_target_group" "app" {
@@ -211,7 +171,7 @@ resource "aws_lb_target_group" "app" {
   port        = var.app_port
   protocol    = "HTTP"
   target_type = "ip"
-  vpc_id      = aws_vpc.main.id
+  vpc_id      = data.aws_vpc.default.id
 
   health_check {
     path                = "/api/health"
@@ -285,7 +245,7 @@ resource "aws_ecs_service" "app" {
   launch_type     = "FARGATE"
 
   network_configuration {
-    subnets          = aws_subnet.public[*].id
+    subnets          = data.aws_subnets.default.ids
     security_groups  = [aws_security_group.ecs.id]
     assign_public_ip = true
   }

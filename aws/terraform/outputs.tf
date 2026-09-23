@@ -22,3 +22,8 @@ output "health_check_url" {
   description = "Primary health check URL."
   value       = "http://${aws_lb.main.dns_name}/api/health"
 }
+
+output "ecs_security_group_id" {
+  description = "Security group used by the ECS tasks - use this as the allowed source when opening port 11434 on your Ollama instance."
+  value       = aws_security_group.ecs.id
+}
